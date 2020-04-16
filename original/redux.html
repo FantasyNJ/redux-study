@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    前端宇宙
+  </div>
+  <div id="main">
+    <div id="content">大家好，我是前端宇宙作者刘小夕</div>
+    <button class="change-theme" id="to-blue">Blue</button>
+    <button class="change-theme" id="to-pink">Pink</button>
+  </div>
+  <div id="counter">
+    <div class="num">0</div>
+    <button class="add">+</button>
+    <button class="subtract">-</button>
+  </div>
+</div>
+<script>
+  const initialState = {
+    color: 'blue'
+  }
+  const initialNum = {
+    number: 0
+  }
+
+  // const state = {
+  //   ...initialState,
+  //   ...initialNum
+  // }
+  const store = createStore(combineReducers({
+    color,
+    counter
+  }))
+
+  const unsub = store.subscribe(() => renderApp(store.getState()));
+
+  renderApp(store.getState())
+  //渲染应用
+  function renderApp(state) {
+    renderHeader(state);
+    renderContent(state);
+    renderNum(state)
+  }
+  //渲染 title 部分
+  function renderHeader(state) {
+    const header = document.getElementById('header');
+    header.style.color = state.color.color;
+  }
+  //渲染内容部分
+  function renderContent(state) {
+    const content = document.getElementById('content');
+    content.style.color = state.color.color;
+  }
+  //渲染counter部分
+  function renderNum(state) {
+    const content = document.querySelector('.num');
+    content.innerHTML = state.counter.number;
+  }
+
+  //点击按钮，更改字体颜色
+  document.getElementById('to-blue').onclick = function() {
+    store.dispatch({
+      type: 'CHANGE_COLOR',
+      color: 'rgb(0, 51, 254)'
+    });
+    //状态修改完之后，需要重新渲染页面
+    // renderApp(store.getState());
+  }
+
+  document.getElementById('to-pink').onclick = function() {
+    store.dispatch({
+      type: 'CHANGE_COLOR',
+      color: 'rgb(247, 109, 132)'
+    });
+    // renderApp(store.getState());
+  }
+
+  document.querySelector('.add').onclick = function () {
+    store.dispatch({
+      type: 'ADD'
+    })
+  }
+
+  document.querySelector('.subtract').onclick = function () {
+    store.dispatch({
+      type: 'SUBTRACT'
+    })
+  }
+
+  function createStore (reducer) {
+    let state;
+    let listeners = [];
+    const getState = () => state;
+    //subscribe 每次调用，都会返回一个取消订阅的方法
+    const subscribe = (ln) => {
+      listeners.push(ln);
+      //订阅之后，也要允许取消订阅。
+      //难道我订了某本杂志之后，就不允许我退订吗？可怕~
+      const unsubscribe = () => {
+        listeners = listeners.filter(listener => ln !== listener);
+      }
+      return unsubscribe;
+    };
+    const dispatch = (action) => {
+      //reducer(state, action) 返回一个新状态
+      state = reducer(state, action);
+      listeners.forEach(ln => ln());
+    }
+    //你要是有个 action 的 type 的值是 `@@redux/__INIT__${Math.random()}`，我敬你是个狠人
+    dispatch({ type: `@@redux/__INIT__${Math.random()}` });
+    return {
+      getState,
+      dispatch,
+      subscribe
+    }
+  }
+
+  function color(state = initialState, action) {
+    switch(action.type) {
+      case 'CHANGE_COLOR':
+        return {
+          ...state,
+          color: action.color
+        }
+      default:
+        return state;
+    }
+  }
+
+  function counter(state = initialNum, action) {
+    console.log(state, 'state')
+    switch (action.type) {
+      case 'ADD':
+        return {
+          ...state,
+          number: ++state.number
+        }
+      case 'SUBTRACT':
+        return {
+          ...state,
+          number: --state.number
+        }
+      default:
+        return state;
+    }
+  }
+
+  function combineReducers(reducers) {
+    return function combination(state = {}, action) {
+      let nextState = {}
+      let hasChanged = false; //状态是否改变
+      for(let key in reducers) {
+        const previousStateForKey = state[key];
+        const nextStateForKey = reducers[key](previousStateForKey, action);
+        nextState[key] = nextStateForKey;
+        //只有所有的 nextStateForKey 均与 previousStateForKey 相等时，hasChanged 的值才是 false
+        hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
+      }
+      console.log(nextState, state, hasChanged,nextState === state)
+      //state 没有改变时，返回原对象
+      return hasChanged ? nextState : state;
+    }
+  }
+</script>
+</body>
+</html>
