@@ -4,13 +4,33 @@ import actions from '../store/actions/counter'
 import {connect} from '../react-redux'
 
 class Counter extends Component{
+  constructor() {
+    super();
+    this.state = {
+      number: store.getState().counter.number
+    }
+  }
+  componentDidMount() {
+    this.unsub = store.subscribe(() => {
+      this.setState({
+        number: store.getState().counter.number
+      })
+    })
+  }
+
+  add() {
+    store.dispatch(actions.add(2))
+  }
+  minus() {
+    store.dispatch(actions.minus(2))
+  }
   render() {
     return (
       <>
         <div>
-          <div>{this.props.number}</div>
-          <button onClick={() => this.props.add(2)}>+</button>
-          <button onClick={() => this.props.minus(2)}>-</button>
+          <div>{this.state.number}</div>
+          <button onClick={this.add}>+</button>
+          <button onClick={this.minus}>-</button>
         </div>
       </>
     )

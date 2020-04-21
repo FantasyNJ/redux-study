@@ -69,6 +69,7 @@ let logger2 = store => dispatch => action => {
 }
 let logger3 = store => dispatch => action => {
   console.log('333');
+  // 只有这个dispatch才是redux的dispatch
   dispatch(action);
   console.log('666');
 }
